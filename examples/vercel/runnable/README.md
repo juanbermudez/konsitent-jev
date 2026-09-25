@@ -1,7 +1,8 @@
-# Runnable examples: structure, judgment, behavior
+# Try the examples
 
-Three paired examples show why a structural pass is useful but incomplete.
-Run from the repository root:
+These three examples each have a good and broken version. Both look right to
+Konsistent because the required files and exports are there. Running the tests
+shows what actually happens. From the repo root:
 
 ```sh
 pnpm examples:vercel
@@ -9,33 +10,32 @@ pnpm examples:vercel
 pnpm examples:vercel --jev
 ```
 
-The runner copies each selected variant into a temporary project as
-`implementation.ts`, copies its test as `implementation.test.ts`, runs Konsistent,
-and then runs the actual Node test process. Deliberately broken examples are
-expected to fail; the demonstration succeeds only when those failures occur for
-the intended reason. No network calls occur unless `--jev` is supplied.
+The runner puts each version and its test in a temporary project, runs
+Konsistent, and then runs the Node test. A broken version should fail its test
+for the expected reason. It calls Jev only when you add `--jev`.
 
-| Example | Both versions pass Konsistent | What execution demonstrates |
+| Example | What Konsistent sees | What running it shows |
 | --- | --- | --- |
-| [Meaningful tests](meaningful-tests/README.md) | Test file exists, imports parser; parser exports required function | Strong assertions catch removed validation; existence-only test stays green |
-| [Lock ownership](lock-ownership/README.md) | Required release function and importing test exist | Split check/delete loses another owner's lock under a controlled schedule |
-| [Provider settings](provider-settings/README.md) | Factory accepts settings and returns expected provider type | A real function call must use the supplied URL and transport |
+| [Meaningful tests](meaningful-tests/README.md) | The parser and importing test exist | A weak test stays green after validation is removed |
+| [Lock ownership](lock-ownership/README.md) | The release function and test exist | An old owner deletes a new owner's lock |
+| [Provider settings](provider-settings/README.md) | The factory has the expected shape | The request ignores the caller's URL or fetch function |
 
-Jev reviews original source and the requirement, without seeing variant IDs,
-expected labels, mutation code, or execution results. Its judgment is saved
-separately from runtime evidence. Reports include raw test output under
+Jev sees the source and the requirement, but not which version is supposed to
+pass or what the test found. Its answer is saved separately from the test output
+under
 `artifacts/vercel-examples/`.
 
 The patterns are adapted from Vercel's
 [adjacent-test conventions](https://github.com/vercel-labs/konsistent/blob/main/konsistent.json),
 [Chat state-adapter conventions](https://github.com/vercel/chat/blob/main/.github/konsistent.json),
 and [AI SDK provider conventions](https://github.com/vercel/ai/blob/main/.github/konsistent.json).
-These are authored demonstrations, not Vercel defect reports or full SDK adapters.
+We wrote these examples to explore the patterns; they are not bug reports about
+Vercel's projects.
 
 ## Verified result
 
-All six variants passed structural checks. Execution demonstrated the intended
-outcomes for all six, and live Jev matched all six expected source judgments
-(`jev-1.13.0`). The meaningful test detected the deliberately invalid parser;
-the superficial test missed it. These six labeled examples are not a held-out
-accuracy benchmark. [Validation summary](../../../docs/results.md).
+All six versions passed Konsistent. The tests behaved as expected in all six,
+and Jev gave the expected answer for all six in one live run with `jev-1.13.0`.
+The strong parser test caught the removed validation; the weak one missed it.
+This small set does not predict how often Jev will be right on new code.
+[Full results](../../../docs/results.md).

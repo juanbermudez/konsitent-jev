@@ -1,14 +1,14 @@
-# Transactional outbox
+# Save the payment and outbox message together
 
-The requirement is all-or-nothing payment and outbox insertion. The correct
-implementation uses the transaction object for both writes; the flawed one calls
-the root database for the outbox write. A failure after both writes must leave
-neither record. The supplied store stages transaction writes and commits root
-writes immediately.
+If a transaction fails, neither the payment nor its outbox message should be
+saved. The good version uses the transaction for both writes. The broken version
+writes the outbox message directly to the database, so that message survives
+even when the payment is rolled back.
 
-Runtime tests distinguish both implementations. **Jev falsely flagged the correct
-variant in the latest live run.** This example deliberately retains that finding;
-model confidence and structural validity cannot replace execution evidence.
+The example store holds transaction writes until commit but saves direct writes
+right away. Its test catches the broken version. **Jev flagged the good version
+as broken in the latest live run**, which is why this repo treats Jev's answer as
+feedback rather than proof.
 
-Run `pnpm examples:advanced` (local transaction model) or add `--jev`. No live
-database was used.
+Run `pnpm examples:advanced`, or add `--jev` for a live review. The example does
+not connect to a database.

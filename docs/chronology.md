@@ -83,9 +83,9 @@ bounds optional review, and the ledger/head is checked again before saving it.
   edits; the Post hook made a live Jev request and returned `test: relevant` and
   `plan: relevant`. This was not a native Codex hook session.
 
-The payment webhook snippets are review fixtures, not an implemented payment
-service. No payment, PostgreSQL, or webhook execution proof is claimed. The separate
-checkout example still provides runnable CLI E2E tests.
+The webhook snippets are code for Jev to read. This demo does not send a webhook,
+charge anyone, or connect to PostgreSQL. The separate checkout example runs its
+own CLI tests.
 
 This small labeled development set does not establish general accuracy. A validation
 summary is in [results.md](results.md); raw reports are generated locally.

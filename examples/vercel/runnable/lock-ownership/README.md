@@ -1,28 +1,26 @@
-# An ownership check can still have a race
+# Checking a lock is not the same as releasing it safely
 
-Requirement: the current owner can release its lock; a stale owner cannot delete
-another owner's lock.
+The current owner should be able to release its lock. An old owner must not be
+able to delete somebody else's lock.
 
 [atomic.ts](atomic.ts) delegates to one atomic compare-and-delete operation.
-[racy.ts](racy.ts) reads the token, then deletes in a separate operation. Both
-export the required function and have the same behavioral test.
+[racy.ts](racy.ts) reads the token and deletes later. Both export the expected
+function and have the same test, so Konsistent accepts both.
 
-The [store](store.ts) creates a deterministic interleaving, without sleeps:
+The [fake store](store.ts) makes the race repeatable without timers:
 
 1. Owner A starts releasing its lock.
 2. The split implementation reads A's token.
-3. The store replaces ownership with B before returning that read.
-4. A's implementation deletes the key using its stale result.
-5. The test observes that B's lock disappeared.
+3. Before the read returns, the store lets B take over the lock.
+4. A deletes the lock based on the old token it read.
+5. The test catches B's missing lock.
 
-The atomic variant has no separate read at which this takeover can occur. Its
-comparison and deletion happen in one operation. Other tests verify ordinary
-release and rejection of a token belonging to an already-replaced owner.
+The good version compares and deletes in one operation, leaving no gap for B
+to take over. The tests also check an ordinary release and a stale token.
 
 [ownership.test.ts](ownership.test.ts) executes both variants through the same
-interface. Jev receives the store's semantics and source, so it can judge atomicity
-without assuming a helper's behavior.
+interface. Jev gets the store code too, so it can see what the helper does.
 
-This is an executable scheduling model, not a live Redis integration test. It
-illustrates the ownership rule behind Chat SDK's
+This test uses the fake store, not Redis. It demonstrates the ownership rule
+behind Chat SDK's
 [atomic Redis release](https://github.com/vercel/chat/blob/main/packages/state-redis/src/index.ts).

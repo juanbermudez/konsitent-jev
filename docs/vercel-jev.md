@@ -18,9 +18,9 @@ and [Redis implementation](https://github.com/vercel/chat/blob/main/packages/sta
 The current Redis implementation compares the token and deletes through an atomic
 Lua operation. Our broken examples deliberately depart from that pattern.
 
-The provider scenario uses an explicit demo requirement: honor a caller's custom
-base URL and fetch function. It illustrates the gap between a factory/settings
-signature and its behavior; it is not an assertion about a defect in an AI SDK provider.
+For the provider example, we set a simple requirement: use the caller's URL and
+fetch function. The factory has the right signature in both versions, but one
+throws those settings away. This is our example, not a reported AI SDK bug.
 
 ## What we tested
 
