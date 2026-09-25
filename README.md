@@ -1,9 +1,9 @@
 # konsitent-jev
 
-Use [Konsistent](https://github.com/vercel-labs/konsistent) when you can spell out
-the rule in code, like which files, imports, or exports should exist. Use
-[Jev](https://docs.typesafe.ai) when those checks are not enough, like deciding
-whether retries reuse a payment key or a cache keeps tenants separate.
+Use [Konsistent](https://github.com/vercel-labs/konsistent) for structural rules:
+which files, imports, or exports should exist. Test behavior by running the code.
+[Jev](https://docs.typesafe.ai) adds a source review of requirements those
+structural rules cannot check, such as whether retries reuse a payment key.
 
 ## Install
 
@@ -115,9 +115,10 @@ pnpm examples:advanced --jev  # Live Jev; requires TYPESAFE_API_KEY
 ```
 
 Each example has a good version and a deliberately broken one. The broken tests
-should fail for the expected reason. They use small local stand-ins for locks,
-transactions, payment responses, and network requests; no real Redis, database,
-or payment service is called.
+should fail for the expected reason. The examples show whether Jev can also spot
+the issue from source; they do not depend on Jev to test the behavior. They use
+small local stand-ins for locks, transactions, payment responses, and network
+requests; no real Redis, database, or payment service is called.
 
 In the latest live run, Jev got **7 of 8** advanced examples right. It flagged
 the correct outbox version as broken. [Results and limits](docs/results.md).
