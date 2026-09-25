@@ -1,12 +1,9 @@
 # konsitent-jev
 
-Use [Konsistent](https://github.com/vercel-labs/konsistent) to check code structure
-and [Jev](https://docs.typesafe.ai) to review what the code does. This is a
-community project, unaffiliated with Vercel or TypeSafe.
-
-Konsistent can tell you whether a test file exists or a function is exported.
-Jev can look at a harder question: does a retry reuse the same payment key, or
-can one tenant read another tenant's cached data?
+Use [Konsistent](https://github.com/vercel-labs/konsistent) when you can spell out
+the rule in code, like which files, imports, or exports should exist. Use
+[Jev](https://docs.typesafe.ai) when those checks are not enough, like deciding
+whether retries reuse a payment key or a cache keeps tenants separate.
 
 ## Install
 
