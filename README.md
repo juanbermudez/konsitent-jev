@@ -1,4 +1,4 @@
-![Vercel plus TypeSafe AI](assets/readme-banner.png)
+![Konsistent plus Jev](assets/readme-banner.png)
 
 # konsitent-jev
 
