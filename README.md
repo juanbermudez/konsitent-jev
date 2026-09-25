@@ -1,3 +1,5 @@
+![Vercel plus TypeSafe AI](assets/readme-banner.png)
+
 # konsitent-jev
 
 Structural conventions with [Konsistent](https://github.com/vercel-labs/konsistent).
