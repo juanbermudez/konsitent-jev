@@ -1,0 +1,156 @@
+[
+  {
+    "id": "real-boundaries-concurrent-retry",
+    "state": {
+      "requirement": "Handle signed payment webhooks idempotently. Concurrent duplicate deliveries and retries after transaction rollback must produce one durable payment and one outbox message. Reject invalid signatures without writes.",
+      "tests": {
+        "tests/payment-webhook.e2e.ts": "test('concurrent replay and rollback retry', async () => { const app = await startRealServerWithIsolatedPostgres(); const signed = signProviderEvent({id:'evt-42', amount:4200}); await app.db.injectOneTransactionFailure(); await app.http.post('/webhooks/payment', signed); await Promise.all([app.http.post('/webhooks/payment', signed), app.http.post('/webhooks/payment', signed)]); expect(await app.db.paymentsFor('evt-42')).toEqual([{amount:4200}]); expect(await app.db.outboxFor('evt-42')).toHaveLength(1); }); test('invalid signature has no writes', async () => { const app = await startRealServerWithIsolatedPostgres(); expect((await app.http.post('/webhooks/payment', {signature:'invalid',body:{id:'evt-bad'}})).status).toBe(401); expect(await app.db.paymentsFor('evt-bad')).toEqual([]); }); // Harness contract: real HTTP server and isolated PostgreSQL; transaction-failure injection rolls back the first transaction. Query helpers read committed rows, not mocks. Fixtures reset the database between tests."
+      },
+      "plans": {
+        "docs/payment-webhook-failures.md": "Concurrent duplicate events: use the provider event ID as a unique transaction key; exactly one payment and outbox row. Database failure: roll back both rows and permit a retry. Invalid signature: return 401 before persistence. Lost HTTP acknowledgement: redelivery must not duplicate committed rows."
+      },
+      "implementationBefore": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.insertPayment(req.event); await db.insertOutbox(req.event); }"
+      },
+      "implementationAfter": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.transaction(async tx => { if (!await tx.claimUniqueEvent(req.event.id)) return; await tx.insertPayment(req.event); await tx.insertOutbox(req.event); }); } // claimUniqueEvent uses a unique constraint in the same transaction."
+      }
+    },
+    "expected": {
+      "test": "relevant",
+      "plan": "relevant"
+    }
+  },
+  {
+    "id": "skipped-placeholder",
+    "state": {
+      "requirement": "Handle signed payment webhooks idempotently. Concurrent duplicate deliveries and retries after transaction rollback must produce one durable payment and one outbox message. Reject invalid signatures without writes.",
+      "tests": {
+        "tests/payment-webhook.e2e.ts": "test.skip('concurrent duplicate delivery', async () => { /* TODO */ });"
+      },
+      "plans": {
+        "docs/payment-webhook-failures.md": "TODO: think about failures"
+      },
+      "implementationBefore": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.insertPayment(req.event); await db.insertOutbox(req.event); }"
+      },
+      "implementationAfter": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.transaction(async tx => { if (!await tx.claimUniqueEvent(req.event.id)) return; await tx.insertPayment(req.event); await tx.insertOutbox(req.event); }); } // claimUniqueEvent uses a unique constraint in the same transaction."
+      }
+    },
+    "expected": {
+      "test": "inadequate",
+      "plan": "inadequate"
+    }
+  },
+  {
+    "id": "mocked-boundary-hides-transaction",
+    "state": {
+      "requirement": "Handle signed payment webhooks idempotently. Concurrent duplicate deliveries and retries after transaction rollback must produce one durable payment and one outbox message. Reject invalid signatures without writes.",
+      "tests": {
+        "tests/payment-webhook.e2e.ts": "test('webhook handles duplicate events', async () => { const db = {transaction: async fn => fn({claimUniqueEvent: async () => false,insertPayment: vi.fn(),insertOutbox: vi.fn()})}; await handle(signedEvent, db); expect(db.transaction).toBeDefined(); }); // Real uniqueness, transaction rollback and persistence are not exercised."
+      },
+      "plans": {
+        "docs/payment-webhook-failures.md": "Concurrent duplicate events: use the provider event ID as a unique transaction key; exactly one payment and outbox row. Database failure: roll back both rows and permit a retry. Invalid signature: return 401 before persistence. Lost HTTP acknowledgement: redelivery must not duplicate committed rows."
+      },
+      "implementationBefore": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.insertPayment(req.event); await db.insertOutbox(req.event); }"
+      },
+      "implementationAfter": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.transaction(async tx => { if (!await tx.claimUniqueEvent(req.event.id)) return; await tx.insertPayment(req.event); await tx.insertOutbox(req.event); }); } // claimUniqueEvent uses a unique constraint in the same transaction."
+      }
+    },
+    "expected": {
+      "test": "inadequate",
+      "plan": "relevant"
+    }
+  },
+  {
+    "id": "self-derived-expectation",
+    "state": {
+      "requirement": "Handle signed payment webhooks idempotently. Concurrent duplicate deliveries and retries after transaction rollback must produce one durable payment and one outbox message. Reject invalid signatures without writes.",
+      "tests": {
+        "tests/payment-webhook.e2e.ts": "const expected = await handleWebhook(event, db); const actual = expected; expect(actual).toEqual(expected);"
+      },
+      "plans": {
+        "docs/payment-webhook-failures.md": "Concurrent duplicate events: use the provider event ID as a unique transaction key; exactly one payment and outbox row. Database failure: roll back both rows and permit a retry. Invalid signature: return 401 before persistence. Lost HTTP acknowledgement: redelivery must not duplicate committed rows."
+      },
+      "implementationBefore": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.insertPayment(req.event); await db.insertOutbox(req.event); }"
+      },
+      "implementationAfter": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.transaction(async tx => { if (!await tx.claimUniqueEvent(req.event.id)) return; await tx.insertPayment(req.event); await tx.insertOutbox(req.event); }); } // claimUniqueEvent uses a unique constraint in the same transaction."
+      }
+    },
+    "expected": {
+      "test": "inadequate",
+      "plan": "relevant"
+    }
+  },
+  {
+    "id": "opaque-replay-helper",
+    "state": {
+      "requirement": "Handle signed payment webhooks idempotently. Concurrent duplicate deliveries and retries after transaction rollback must produce one durable payment and one outbox message. Reject invalid signatures without writes.",
+      "tests": {
+        "tests/payment-webhook.e2e.ts": "test('full replay safety', async () => { await verifyWebhookReplay(); }); // Helper definition and behavior unavailable."
+      },
+      "plans": {
+        "docs/payment-webhook-failures.md": "Concurrent duplicate events: use the provider event ID as a unique transaction key; exactly one payment and outbox row. Database failure: roll back both rows and permit a retry. Invalid signature: return 401 before persistence. Lost HTTP acknowledgement: redelivery must not duplicate committed rows."
+      },
+      "implementationBefore": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.insertPayment(req.event); await db.insertOutbox(req.event); }"
+      },
+      "implementationAfter": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.transaction(async tx => { if (!await tx.claimUniqueEvent(req.event.id)) return; await tx.insertPayment(req.event); await tx.insertOutbox(req.event); }); } // claimUniqueEvent uses a unique constraint in the same transaction."
+      }
+    },
+    "expected": {
+      "test": "insufficient_evidence",
+      "plan": "relevant"
+    }
+  },
+  {
+    "id": "single-happy-path",
+    "state": {
+      "requirement": "Handle signed payment webhooks idempotently. Concurrent duplicate deliveries and retries after transaction rollback must produce one durable payment and one outbox message. Reject invalid signatures without writes.",
+      "tests": {
+        "tests/payment-webhook.e2e.ts": "test('payment accepted', async () => { const response = await realHttp.post('/webhooks/payment', signedValidEvent); expect(response.status).toBe(200); }); // No retries, duplicate deliveries, committed row checks, invalid signatures or rollback tests."
+      },
+      "plans": {
+        "docs/payment-webhook-failures.md": "Concurrent duplicate events: use the provider event ID as a unique transaction key; exactly one payment and outbox row. Database failure: roll back both rows and permit a retry. Invalid signature: return 401 before persistence. Lost HTTP acknowledgement: redelivery must not duplicate committed rows."
+      },
+      "implementationBefore": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.insertPayment(req.event); await db.insertOutbox(req.event); }"
+      },
+      "implementationAfter": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.transaction(async tx => { if (!await tx.claimUniqueEvent(req.event.id)) return; await tx.insertPayment(req.event); await tx.insertOutbox(req.event); }); } // claimUniqueEvent uses a unique constraint in the same transaction."
+      }
+    },
+    "expected": {
+      "test": "inadequate",
+      "plan": "relevant"
+    }
+  },
+  {
+    "id": "unrelated-plan",
+    "state": {
+      "requirement": "Handle signed payment webhooks idempotently. Concurrent duplicate deliveries and retries after transaction rollback must produce one durable payment and one outbox message. Reject invalid signatures without writes.",
+      "tests": {
+        "tests/payment-webhook.e2e.ts": "test('concurrent replay and rollback retry', async () => { const app = await startRealServerWithIsolatedPostgres(); const signed = signProviderEvent({id:'evt-42', amount:4200}); await app.db.injectOneTransactionFailure(); await app.http.post('/webhooks/payment', signed); await Promise.all([app.http.post('/webhooks/payment', signed), app.http.post('/webhooks/payment', signed)]); expect(await app.db.paymentsFor('evt-42')).toEqual([{amount:4200}]); expect(await app.db.outboxFor('evt-42')).toHaveLength(1); }); test('invalid signature has no writes', async () => { const app = await startRealServerWithIsolatedPostgres(); expect((await app.http.post('/webhooks/payment', {signature:'invalid',body:{id:'evt-bad'}})).status).toBe(401); expect(await app.db.paymentsFor('evt-bad')).toEqual([]); }); // Harness contract: real HTTP server and isolated PostgreSQL; transaction-failure injection rolls back the first transaction. Query helpers read committed rows, not mocks. Fixtures reset the database between tests."
+      },
+      "plans": {
+        "docs/payment-webhook-failures.md": "When a profile image upload fails, retry the upload and show a toast."
+      },
+      "implementationBefore": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.insertPayment(req.event); await db.insertOutbox(req.event); }"
+      },
+      "implementationAfter": {
+        "src/payment-webhook.ts": "export async function handle(req, db) { verifySignature(req); await db.transaction(async tx => { if (!await tx.claimUniqueEvent(req.event.id)) return; await tx.insertPayment(req.event); await tx.insertOutbox(req.event); }); } // claimUniqueEvent uses a unique constraint in the same transaction."
+      }
+    },
+    "expected": {
+      "test": "relevant",
+      "plan": "inadequate"
+    }
+  }
+]

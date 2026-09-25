@@ -1,0 +1,124 @@
+[
+  {
+    "id": "retry-correct",
+    "requirement": "A transport retry after the server committed a charge must reuse the same idempotency key, so the caller is charged only once. The client deduplicates committed charges by key.",
+    "files": {
+      "implementation.ts": "retry/correct.ts",
+      "implementation.test.ts": "retry/behavior.test.ts"
+    },
+    "semanticFiles": [
+      "implementation.ts",
+      "implementation.test.ts"
+    ],
+    "expected": "supported",
+    "runtimeExit": 0
+  },
+  {
+    "id": "retry-flawed",
+    "requirement": "A transport retry after the server committed a charge must reuse the same idempotency key, so the caller is charged only once. The client deduplicates committed charges by key.",
+    "files": {
+      "implementation.ts": "retry/flawed.ts",
+      "implementation.test.ts": "retry/behavior.test.ts"
+    },
+    "semanticFiles": [
+      "implementation.ts",
+      "implementation.test.ts"
+    ],
+    "expected": "contradicted",
+    "runtimeExit": 1
+  },
+  {
+    "id": "tenant-cache-correct",
+    "requirement": "In a shared cache, identical resource IDs belonging to different tenants must remain isolated. Cache hits within one tenant should avoid repeated loading.",
+    "files": {
+      "implementation.ts": "tenant-cache/correct.ts",
+      "implementation.test.ts": "tenant-cache/behavior.test.ts"
+    },
+    "semanticFiles": [
+      "implementation.ts",
+      "implementation.test.ts"
+    ],
+    "expected": "supported",
+    "runtimeExit": 0
+  },
+  {
+    "id": "tenant-cache-flawed",
+    "requirement": "In a shared cache, identical resource IDs belonging to different tenants must remain isolated. Cache hits within one tenant should avoid repeated loading.",
+    "files": {
+      "implementation.ts": "tenant-cache/flawed.ts",
+      "implementation.test.ts": "tenant-cache/behavior.test.ts"
+    },
+    "semanticFiles": [
+      "implementation.ts",
+      "implementation.test.ts"
+    ],
+    "expected": "contradicted",
+    "runtimeExit": 1
+  },
+  {
+    "id": "outbox-correct",
+    "requirement": "Payment and outbox insertion must commit or roll back together. The supplied store defines tx writes as staged and root writes as immediate. A failure after writes must leave neither row.",
+    "files": {
+      "implementation.ts": "outbox/correct.ts",
+      "implementation.test.ts": "outbox/behavior.test.ts",
+      "store.ts": "outbox/store.ts"
+    },
+    "semanticFiles": [
+      "implementation.ts",
+      "implementation.test.ts",
+      "store.ts"
+    ],
+    "expected": "supported",
+    "runtimeExit": 0
+  },
+  {
+    "id": "outbox-flawed",
+    "requirement": "Payment and outbox insertion must commit or roll back together. The supplied store defines tx writes as staged and root writes as immediate. A failure after writes must leave neither row.",
+    "files": {
+      "implementation.ts": "outbox/flawed.ts",
+      "implementation.test.ts": "outbox/behavior.test.ts",
+      "store.ts": "outbox/store.ts"
+    },
+    "semanticFiles": [
+      "implementation.ts",
+      "implementation.test.ts",
+      "store.ts"
+    ],
+    "expected": "contradicted",
+    "runtimeExit": 1
+  },
+  {
+    "id": "context-correct",
+    "requirement": "In a shared cache, identical resource IDs belonging to different tenants must remain isolated. Cache hits within one tenant should avoid repeated loading.",
+    "files": {
+      "implementation.ts": "context/implementation.ts",
+      "helper.ts": "context/correct-helper.ts",
+      "implementation.test.ts": "tenant-cache/behavior.test.ts"
+    },
+    "semanticFiles": [
+      "implementation.ts"
+    ],
+    "contextFiles": [
+      "helper.ts"
+    ],
+    "expected": "supported",
+    "runtimeExit": 0
+  },
+  {
+    "id": "context-flawed",
+    "requirement": "In a shared cache, identical resource IDs belonging to different tenants must remain isolated. Cache hits within one tenant should avoid repeated loading.",
+    "files": {
+      "implementation.ts": "context/implementation.ts",
+      "helper.ts": "context/flawed-helper.ts",
+      "implementation.test.ts": "tenant-cache/behavior.test.ts"
+    },
+    "semanticFiles": [
+      "implementation.ts"
+    ],
+    "contextFiles": [
+      "helper.ts"
+    ],
+    "expected": "contradicted",
+    "runtimeExit": 1
+  }
+]

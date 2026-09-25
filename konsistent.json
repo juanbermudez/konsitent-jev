@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/konsistent/konsistent.schema.json",
+  "version": "v1",
+  "conventionSources": {
+    "testing": "./conventions/testing.json"
+  },
+  "conventions": [
+    {
+      "use": "testing/feature-contract",
+      "paths": "features/{feature}"
+    },
+    {
+      "use": "testing/required-file",
+      "paths": [
+        "features/*/main.ts",
+        "features/*/acceptance.e2e.ts",
+        "features/*/failure-modes.md"
+      ]
+    },
+    {
+      "use": "testing/scenario-contract",
+      "paths": "features/{feature}/acceptance.e2e.ts"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "requirement": "Handle signed payment webhooks idempotently. Concurrent duplicate deliveries and retries after transaction rollback must produce one durable payment and one outbox message. Reject invalid signatures without writes.",
+  "tests": {
+    "tests/payment-webhook.e2e.ts": "test('concurrent replay and rollback retry', async () => { const app = await startRealServerWithIsolatedPostgres(); const signed = signProviderEvent({id:'evt-42', amount:4200}); await app.db.injectOneTransactionFailure(); await app.http.post('/webhooks/payment', signed); await Promise.all([app.http.post('/webhooks/payment', signed), app.http.post('/webhooks/payment', signed)]); expect(await app.db.paymentsFor('evt-42')).toEqual([{amount:4200}]); expect(await app.db.outboxFor('evt-42')).toHaveLength(1); }); test('invalid signature has no writes', async () => { const app = await startRealServerWithIsolatedPostgres(); expect((await app.http.post('/webhooks/payment', {signature:'invalid',body:{id:'evt-bad'}})).status).toBe(401); expect(await app.db.paymentsFor('evt-bad')).toEqual([]); }); // Harness contract: real HTTP server and isolated PostgreSQL; transaction-failure injection rolls back the first transaction. Query helpers read committed rows, not mocks. Fixtures reset the database between tests."
+  },
+  "plans": {
+    "docs/payment-webhook-failures.md": "Concurrent duplicate events: use the provider event ID as a unique transaction key; exactly one payment and outbox row. Database failure: roll back both rows and permit a retry. Invalid signature: return 401 before persistence. Lost HTTP acknowledgement: redelivery must not duplicate committed rows."
+  },
+  "implementationBefore": {"src/payment-webhook.ts":"export async function handle(req, db) { verifySignature(req); await db.insertPayment(req.event); await db.insertOutbox(req.event); }"},
+  "implementationAfter": {"src/payment-webhook.ts":"export async function handle(req, db) { verifySignature(req); await db.transaction(async tx => { if (!await tx.claimUniqueEvent(req.event.id)) return; await tx.insertPayment(req.event); await tx.insertOutbox(req.event); }); } // claimUniqueEvent uses a unique constraint in the same transaction."
+  }
+}

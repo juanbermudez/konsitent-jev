@@ -1,0 +1,51 @@
+{
+  "name": "konsitent-jev",
+  "version": "0.1.0",
+  "description": "Reusable Konsistent conventions with advisory Jev semantic checks.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "check": "konsistent validate && konsistent check && node scripts/check-policy.mjs",
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "check:artifacts": "node scripts/check-artifacts.mjs",
+    "verify": "pnpm check && pnpm test:e2e && pnpm check:artifacts",
+    "jev:review": "node scripts/jev-review.mjs",
+    "history": "node scripts/history.mjs",
+    "test:history": "node scripts/history-e2e.mjs",
+    "jev:vercel": "node scripts/vercel-jev-review.mjs",
+    "examples:vercel": "node scripts/vercel-examples.mjs",
+    "examples:advanced": "node scripts/advanced-examples.mjs",
+    "test:package": "node scripts/consumer-e2e.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  },
+  "bin": {
+    "konsitent-jev": "./src/cli.mjs"
+  },
+  "exports": {
+    "./konsistent": "./conventions/pack.json",
+    "./review": "./src/review.mjs"
+  },
+  "files": [
+    "src",
+    "conventions/pack.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "konsistent": "1.0.0-beta.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/juanbermudez/konsitent-jev.git"
+  },
+  "bugs": {
+    "url": "https://github.com/juanbermudez/konsitent-jev/issues"
+  },
+  "homepage": "https://github.com/juanbermudez/konsitent-jev#readme"
+}

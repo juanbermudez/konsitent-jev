@@ -1,0 +1,374 @@
+[
+  {
+    "id": "test-real-behavior",
+    "family": "adjacent-tests",
+    "expected": "supported",
+    "requirement": "The tests must verify parsed values and rejection of malformed or negative-amount events. Importing the parser or checking its existence is insufficient.",
+    "files": {
+      "src/parse-event.ts": "export function parseEvent(raw: string) { const v = JSON.parse(raw); if (typeof v.id !== 'string' || typeof v.amount !== 'number' || v.amount <= 0) throw Error('invalid event'); return {id:v.id, amount:v.amount}; }",
+      "src/parse-event.test.ts": "import { parseEvent } from './parse-event.js'; import { test, expect } from 'vitest'; test('preserves data and rejects invalid input', () => { expect(parseEvent('{\"id\":\"e1\",\"amount\":42}')).toEqual({id:'e1',amount:42}); expect(() => parseEvent('{\"id\":\"e1\",\"amount\":-1}')).toThrow(); expect(() => parseEvent('{')).toThrow(); });"
+    },
+    "config": {
+      "version": "v1",
+      "conventions": [
+        {
+          "name": "source-has-test",
+          "paths": "src/parse-event.ts",
+          "must": {
+            "haveFiles": [
+              "parse-event.test.ts"
+            ]
+          }
+        },
+        {
+          "name": "test-imports-source",
+          "paths": "src/parse-event.test.ts",
+          "must": {
+            "importValuesFrom": "./parse-event.js"
+          }
+        }
+      ]
+    },
+    "context": "Vitest test/expect have their standard meanings. The unavailable-harness implementation, if imported, is not supplied.",
+    "source": "https://github.com/vercel-labs/konsistent/blob/main/konsistent.json"
+  },
+  {
+    "id": "test-import-only",
+    "family": "adjacent-tests",
+    "expected": "contradicted",
+    "requirement": "The tests must verify parsed values and rejection of malformed or negative-amount events. Importing the parser or checking its existence is insufficient.",
+    "files": {
+      "src/parse-event.ts": "export function parseEvent(raw: string) { const v = JSON.parse(raw); if (typeof v.id !== 'string' || typeof v.amount !== 'number' || v.amount <= 0) throw Error('invalid event'); return {id:v.id, amount:v.amount}; }",
+      "src/parse-event.test.ts": "import { parseEvent } from './parse-event.js'; import { test, expect } from 'vitest'; test('parser exists', () => { expect(typeof parseEvent).toBe('function'); });"
+    },
+    "config": {
+      "version": "v1",
+      "conventions": [
+        {
+          "name": "source-has-test",
+          "paths": "src/parse-event.ts",
+          "must": {
+            "haveFiles": [
+              "parse-event.test.ts"
+            ]
+          }
+        },
+        {
+          "name": "test-imports-source",
+          "paths": "src/parse-event.test.ts",
+          "must": {
+            "importValuesFrom": "./parse-event.js"
+          }
+        }
+      ]
+    },
+    "context": "Vitest test/expect have their standard meanings. The unavailable-harness implementation, if imported, is not supplied.",
+    "source": "https://github.com/vercel-labs/konsistent/blob/main/konsistent.json"
+  },
+  {
+    "id": "test-opaque-helper",
+    "family": "adjacent-tests",
+    "expected": "insufficient_evidence",
+    "requirement": "The tests must verify parsed values and rejection of malformed or negative-amount events. Importing the parser or checking its existence is insufficient.",
+    "files": {
+      "src/parse-event.ts": "export function parseEvent(raw: string) { const v = JSON.parse(raw); if (typeof v.id !== 'string' || typeof v.amount !== 'number' || v.amount <= 0) throw Error('invalid event'); return {id:v.id, amount:v.amount}; }",
+      "src/parse-event.test.ts": "import { parseEvent } from './parse-event.js'; import { verifyParser } from './unavailable-harness.js'; verifyParser(parseEvent);"
+    },
+    "config": {
+      "version": "v1",
+      "conventions": [
+        {
+          "name": "source-has-test",
+          "paths": "src/parse-event.ts",
+          "must": {
+            "haveFiles": [
+              "parse-event.test.ts"
+            ]
+          }
+        },
+        {
+          "name": "test-imports-source",
+          "paths": "src/parse-event.test.ts",
+          "must": {
+            "importValuesFrom": "./parse-event.js"
+          }
+        }
+      ]
+    },
+    "context": "Vitest test/expect have their standard meanings. The unavailable-harness implementation, if imported, is not supplied.",
+    "source": "https://github.com/vercel-labs/konsistent/blob/main/konsistent.json"
+  },
+  {
+    "id": "lock-atomic-release",
+    "family": "state-lock-ownership",
+    "expected": "supported",
+    "requirement": "A stale lock holder must never delete a newer owner's lock. Token comparison and deletion must be atomic even if ownership changes between client operations.",
+    "files": {
+      "packages/state-demo/src/index.ts": "import type { StateAdapter } from 'chat';\nexport type DemoStateAdapterOptions = {client: any};\nexport class DemoStateAdapter implements StateAdapter { constructor(private client: any) {}\nasync releaseLock(lock: {threadId:string,token:string}) { await this.client.eval(\"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end\", { keys: ['lock:'+lock.threadId], arguments:[lock.token] }); }\n}\nexport function createDemoState(options: DemoStateAdapterOptions): DemoStateAdapter { return new DemoStateAdapter(options.client); }"
+    },
+    "config": {
+      "version": "v1",
+      "conventions": [
+        {
+          "name": "state-adapter-shape",
+          "paths": "packages/state-demo/src/index.ts",
+          "must": {
+            "importTypes": [
+              {
+                "name": "StateAdapter",
+                "from": "chat"
+              }
+            ],
+            "exportClasses": [
+              {
+                "name": "DemoStateAdapter",
+                "implement": [
+                  "StateAdapter"
+                ]
+              }
+            ],
+            "exportFunctions": [
+              "createDemoState"
+            ],
+            "exportTypes": [
+              "DemoStateAdapterOptions"
+            ]
+          }
+        }
+      ]
+    },
+    "context": "Relevant method excerpt only; unrelated StateAdapter methods omitted. Redis get and del are separate commands. Redis eval executes a Lua script atomically. releaseIfOwned has no supplied implementation or semantic contract.",
+    "source": "https://github.com/vercel/chat/blob/main/.github/konsistent.json"
+  },
+  {
+    "id": "lock-unconditional-release",
+    "family": "state-lock-ownership",
+    "expected": "contradicted",
+    "requirement": "A stale lock holder must never delete a newer owner's lock. Token comparison and deletion must be atomic even if ownership changes between client operations.",
+    "files": {
+      "packages/state-demo/src/index.ts": "import type { StateAdapter } from 'chat';\nexport type DemoStateAdapterOptions = {client: any};\nexport class DemoStateAdapter implements StateAdapter { constructor(private client: any) {}\nasync releaseLock(lock: {threadId:string,token:string}) { await this.client.del('lock:'+lock.threadId); }\n}\nexport function createDemoState(options: DemoStateAdapterOptions): DemoStateAdapter { return new DemoStateAdapter(options.client); }"
+    },
+    "config": {
+      "version": "v1",
+      "conventions": [
+        {
+          "name": "state-adapter-shape",
+          "paths": "packages/state-demo/src/index.ts",
+          "must": {
+            "importTypes": [
+              {
+                "name": "StateAdapter",
+                "from": "chat"
+              }
+            ],
+            "exportClasses": [
+              {
+                "name": "DemoStateAdapter",
+                "implement": [
+                  "StateAdapter"
+                ]
+              }
+            ],
+            "exportFunctions": [
+              "createDemoState"
+            ],
+            "exportTypes": [
+              "DemoStateAdapterOptions"
+            ]
+          }
+        }
+      ]
+    },
+    "context": "Relevant method excerpt only; unrelated StateAdapter methods omitted. Redis get and del are separate commands. Redis eval executes a Lua script atomically. releaseIfOwned has no supplied implementation or semantic contract.",
+    "source": "https://github.com/vercel/chat/blob/main/.github/konsistent.json"
+  },
+  {
+    "id": "lock-check-then-delete-race",
+    "family": "state-lock-ownership",
+    "expected": "contradicted",
+    "requirement": "A stale lock holder must never delete a newer owner's lock. Token comparison and deletion must be atomic even if ownership changes between client operations.",
+    "files": {
+      "packages/state-demo/src/index.ts": "import type { StateAdapter } from 'chat';\nexport type DemoStateAdapterOptions = {client: any};\nexport class DemoStateAdapter implements StateAdapter { constructor(private client: any) {}\nasync releaseLock(lock: {threadId:string,token:string}) { const key='lock:'+lock.threadId; if (await this.client.get(key) === lock.token) await this.client.del(key); }\n}\nexport function createDemoState(options: DemoStateAdapterOptions): DemoStateAdapter { return new DemoStateAdapter(options.client); }"
+    },
+    "config": {
+      "version": "v1",
+      "conventions": [
+        {
+          "name": "state-adapter-shape",
+          "paths": "packages/state-demo/src/index.ts",
+          "must": {
+            "importTypes": [
+              {
+                "name": "StateAdapter",
+                "from": "chat"
+              }
+            ],
+            "exportClasses": [
+              {
+                "name": "DemoStateAdapter",
+                "implement": [
+                  "StateAdapter"
+                ]
+              }
+            ],
+            "exportFunctions": [
+              "createDemoState"
+            ],
+            "exportTypes": [
+              "DemoStateAdapterOptions"
+            ]
+          }
+        }
+      ]
+    },
+    "context": "Relevant method excerpt only; unrelated StateAdapter methods omitted. Redis get and del are separate commands. Redis eval executes a Lua script atomically. releaseIfOwned has no supplied implementation or semantic contract.",
+    "source": "https://github.com/vercel/chat/blob/main/.github/konsistent.json"
+  },
+  {
+    "id": "lock-hidden-release-helper",
+    "family": "state-lock-ownership",
+    "expected": "insufficient_evidence",
+    "requirement": "A stale lock holder must never delete a newer owner's lock. Token comparison and deletion must be atomic even if ownership changes between client operations.",
+    "files": {
+      "packages/state-demo/src/index.ts": "import type { StateAdapter } from 'chat';\nexport type DemoStateAdapterOptions = {client: any};\nexport class DemoStateAdapter implements StateAdapter { constructor(private client: any) {}\nasync releaseLock(lock: {threadId:string,token:string}) { await this.client.releaseIfOwned(lock.threadId,lock.token); }\n}\nexport function createDemoState(options: DemoStateAdapterOptions): DemoStateAdapter { return new DemoStateAdapter(options.client); }"
+    },
+    "config": {
+      "version": "v1",
+      "conventions": [
+        {
+          "name": "state-adapter-shape",
+          "paths": "packages/state-demo/src/index.ts",
+          "must": {
+            "importTypes": [
+              {
+                "name": "StateAdapter",
+                "from": "chat"
+              }
+            ],
+            "exportClasses": [
+              {
+                "name": "DemoStateAdapter",
+                "implement": [
+                  "StateAdapter"
+                ]
+              }
+            ],
+            "exportFunctions": [
+              "createDemoState"
+            ],
+            "exportTypes": [
+              "DemoStateAdapterOptions"
+            ]
+          }
+        }
+      ]
+    },
+    "context": "Relevant method excerpt only; unrelated StateAdapter methods omitted. Redis get and del are separate commands. Redis eval executes a Lua script atomically. releaseIfOwned has no supplied implementation or semantic contract.",
+    "source": "https://github.com/vercel/chat/blob/main/.github/konsistent.json"
+  },
+  {
+    "id": "provider-honors-settings",
+    "family": "provider-settings",
+    "expected": "supported",
+    "requirement": "For this demo provider, when callers supply baseURL and fetch, generate must send requests to that baseURL using that fetch implementation. Defaults apply only when a setting is absent.",
+    "files": {
+      "packages/demo/src/demo-provider.ts": "export type DemoSettings = {baseURL?: string; fetch?: typeof fetch};\nexport type DemoProvider = {generate: (body: unknown) => Promise<Response>};\nexport function createDemo(options: DemoSettings): DemoProvider { const request=options.fetch ?? globalThis.fetch; const base=options.baseURL ?? 'https://default.invalid'; return {generate: body => request(base+'/generate',{method:'POST',body:JSON.stringify(body)})}; }"
+    },
+    "config": {
+      "version": "v1",
+      "conventions": [
+        {
+          "name": "provider-factory-shape",
+          "paths": "packages/demo/src/demo-provider.ts",
+          "must": {
+            "exportFunctions": [
+              {
+                "name": "createDemo",
+                "receiveParamsOfTypes": [
+                  "DemoSettings"
+                ],
+                "returnValueOfType": "DemoProvider"
+              }
+            ],
+            "exportTypes": [
+              "DemoSettings",
+              "DemoProvider"
+            ]
+          }
+        }
+      ]
+    },
+    "context": "These are custom demo requirements, not copied provider implementation. If buildProvider is imported its implementation is unavailable. Assess forwarding semantics, not type completeness.",
+    "source": "https://github.com/vercel/ai/blob/main/.github/konsistent.json"
+  },
+  {
+    "id": "provider-discards-settings",
+    "family": "provider-settings",
+    "expected": "contradicted",
+    "requirement": "For this demo provider, when callers supply baseURL and fetch, generate must send requests to that baseURL using that fetch implementation. Defaults apply only when a setting is absent.",
+    "files": {
+      "packages/demo/src/demo-provider.ts": "export type DemoSettings = {baseURL?: string; fetch?: typeof fetch};\nexport type DemoProvider = {generate: (body: unknown) => Promise<Response>};\nexport function createDemo(options: DemoSettings): DemoProvider { return {generate: body => globalThis.fetch('https://default.invalid/generate',{method:'POST',body:JSON.stringify(body)})}; }"
+    },
+    "config": {
+      "version": "v1",
+      "conventions": [
+        {
+          "name": "provider-factory-shape",
+          "paths": "packages/demo/src/demo-provider.ts",
+          "must": {
+            "exportFunctions": [
+              {
+                "name": "createDemo",
+                "receiveParamsOfTypes": [
+                  "DemoSettings"
+                ],
+                "returnValueOfType": "DemoProvider"
+              }
+            ],
+            "exportTypes": [
+              "DemoSettings",
+              "DemoProvider"
+            ]
+          }
+        }
+      ]
+    },
+    "context": "These are custom demo requirements, not copied provider implementation. If buildProvider is imported its implementation is unavailable. Assess forwarding semantics, not type completeness.",
+    "source": "https://github.com/vercel/ai/blob/main/.github/konsistent.json"
+  },
+  {
+    "id": "provider-hidden-builder",
+    "family": "provider-settings",
+    "expected": "insufficient_evidence",
+    "requirement": "For this demo provider, when callers supply baseURL and fetch, generate must send requests to that baseURL using that fetch implementation. Defaults apply only when a setting is absent.",
+    "files": {
+      "packages/demo/src/demo-provider.ts": "export type DemoSettings = {baseURL?: string; fetch?: typeof fetch};\nexport type DemoProvider = {generate: (body: unknown) => Promise<Response>};\nimport { buildProvider } from './unavailable-builder'; export function createDemo(options: DemoSettings): DemoProvider { return buildProvider(options); }"
+    },
+    "config": {
+      "version": "v1",
+      "conventions": [
+        {
+          "name": "provider-factory-shape",
+          "paths": "packages/demo/src/demo-provider.ts",
+          "must": {
+            "exportFunctions": [
+              {
+                "name": "createDemo",
+                "receiveParamsOfTypes": [
+                  "DemoSettings"
+                ],
+                "returnValueOfType": "DemoProvider"
+              }
+            ],
+            "exportTypes": [
+              "DemoSettings",
+              "DemoProvider"
+            ]
+          }
+        }
+      ]
+    },
+    "context": "These are custom demo requirements, not copied provider implementation. If buildProvider is imported its implementation is unavailable. Assess forwarding semantics, not type completeness.",
+    "source": "https://github.com/vercel/ai/blob/main/.github/konsistent.json"
+  }
+]

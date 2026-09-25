@@ -1,0 +1,49 @@
+{
+  "conventionSpecVersion": "v1",
+  "conventions": [
+    {
+      "name": "module-has-test",
+      "description": "A source module has an adjacent named test. Behavioral review is separate.",
+      "must": {
+        "haveFiles": [
+          "${module}.test.ts"
+        ]
+      }
+    },
+    {
+      "name": "test-imports-module",
+      "description": "A test imports its corresponding source module. This does not establish useful assertions.",
+      "must": {
+        "importValuesFrom": "./${module}.ts"
+      }
+    },
+    {
+      "name": "provider-factory",
+      "description": "Provider exports its settings, interface, and creator. Semantic checks verify settings propagation.",
+      "must": {
+        "exportFunctions": [
+          {
+            "name": "createProvider",
+            "receiveParamsOfTypes": [
+              "ProviderSettings"
+            ],
+            "returnValueOfType": "Provider"
+          }
+        ],
+        "exportTypes": [
+          "ProviderSettings",
+          "Provider"
+        ]
+      }
+    },
+    {
+      "name": "module-export",
+      "description": "Require the declared public function; semantic rules check its behavioral contract.",
+      "must": {
+        "exportFunctions": [
+          "${functionName}"
+        ]
+      }
+    }
+  ]
+}

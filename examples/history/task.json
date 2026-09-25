@@ -1,0 +1,6 @@
+{
+  "requirement": "Handle payment-provider webhooks idempotently: concurrent duplicate event deliveries and retries after a database rollback must create exactly one payment and one outbox event; reject invalid signatures without database writes.",
+  "implementation": ["src/payment-webhook.ts"],
+  "tests": ["tests/payment-webhook.e2e.ts"],
+  "plans": ["docs/payment-webhook-failures.md"]
+}

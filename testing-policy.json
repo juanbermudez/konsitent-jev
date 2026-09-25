@@ -1,0 +1,22 @@
+{
+  "productionRoots": [
+    "features",
+    "src",
+    "packages",
+    "app",
+    "lib"
+  ],
+  "testSuffixes": [
+    ".e2e.ts",
+    ".test.ts",
+    ".spec.ts"
+  ],
+  "owners": {
+    "features/checkout/main.ts": "checkout"
+  },
+  "exemptions": {
+    "src/cli.mjs": "Companion package runtime, covered by consumer CLI tests rather than the checkout feature.",
+    "src/review.mjs": "Companion package runtime, covered by consumer CLI tests rather than the checkout feature.",
+    "src/jev-client.mjs": "Companion package runtime, covered by consumer CLI tests rather than the checkout feature."
+  }
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "meaningful-tests", "family": "meaningful-tests", "export": "parseEvent", "semanticExpected": "supported", "runtimeExpected": 0, "mutationExpected": 1,
+    "requirement": "The supplied tests must check preserved payment ID and integer amount, and reject malformed events, empty IDs, negative amounts, and fractional cents. Function existence alone does not satisfy this requirement.",
+    "files": {"implementation.ts":"meaningful-tests/parser.ts", "implementation.test.ts":"meaningful-tests/meaningful.test.ts"},
+    "mutation": "meaningful-tests/invalid-parser.ts"
+  },
+  {
+    "id": "superficial-tests", "family": "meaningful-tests", "export": "parseEvent", "semanticExpected": "contradicted", "runtimeExpected": 0, "mutationExpected": 0,
+    "requirement": "The supplied tests must check preserved payment ID and integer amount, and reject malformed events, empty IDs, negative amounts, and fractional cents. Function existence alone does not satisfy this requirement.",
+    "files": {"implementation.ts":"meaningful-tests/parser.ts", "implementation.test.ts":"meaningful-tests/superficial.test.ts"},
+    "mutation": "meaningful-tests/invalid-parser.ts"
+  },
+  {
+    "id": "atomic-lock-release", "family": "lock-ownership", "export": "releaseLock", "semanticExpected": "supported", "runtimeExpected": 0,
+    "requirement": "Releasing a lock must remove it for its current owner, but must never delete a newer owner's lock. Token comparison and deletion must be atomic. The supplied store explicitly defines compareAndDelete as one atomic operation; get and delete are separate operations.",
+    "files": {"implementation.ts":"lock-ownership/atomic.ts", "implementation.test.ts":"lock-ownership/ownership.test.ts", "store.ts":"lock-ownership/store.ts"}
+  },
+  {
+    "id": "racy-lock-release", "family": "lock-ownership", "export": "releaseLock", "semanticExpected": "contradicted", "runtimeExpected": 1,
+    "requirement": "Releasing a lock must remove it for its current owner, but must never delete a newer owner's lock. Token comparison and deletion must be atomic. The supplied store explicitly defines compareAndDelete as one atomic operation; get and delete are separate operations.",
+    "files": {"implementation.ts":"lock-ownership/racy.ts", "implementation.test.ts":"lock-ownership/ownership.test.ts", "store.ts":"lock-ownership/store.ts"}
+  },
+  {
+    "id": "honors-provider-settings", "family": "provider-settings", "export": "createProvider", "semanticExpected": "supported", "runtimeExpected": 0,
+    "requirement": "When custom baseURL and fetch are supplied, generate must send its POST through that fetch to baseURL/generate. Preserve the prompt in the JSON request body, and normalize a trailing slash on the base URL.",
+    "files": {"implementation.ts":"provider-settings/honors-settings.ts", "implementation.test.ts":"provider-settings/settings.test.ts"}
+  },
+  {
+    "id": "discards-provider-settings", "family": "provider-settings", "export": "createProvider", "semanticExpected": "contradicted", "runtimeExpected": 1,
+    "requirement": "When custom baseURL and fetch are supplied, generate must send its POST through that fetch to baseURL/generate. Preserve the prompt in the JSON request body, and normalize a trailing slash on the base URL.",
+    "files": {"implementation.ts":"provider-settings/discards-settings.ts", "implementation.test.ts":"provider-settings/settings.test.ts"}
+  }
+]

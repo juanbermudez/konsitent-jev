@@ -1,0 +1,23 @@
+{
+  "conventionSpecVersion": "v1",
+  "conventions": [
+    {
+      "name": "feature-contract",
+      "description": "Every feature provides a CLI, exported scenarios, and a failure plan.",
+      "must": { "haveType": "directory", "haveFiles": ["main.ts", "acceptance.e2e.ts", "failure-modes.md"] }
+    },
+    {
+      "name": "required-file",
+      "description": "Required documents and entrypoints are files, not directories.",
+      "must": { "haveType": "file" }
+    },
+    {
+      "name": "scenario-contract",
+      "description": "Scenario modules import the shared type and export data for the central runner.",
+      "must": {
+        "importTypes": [{ "name": "Scenario", "from": "../../testing/scenario.ts" }],
+        "exportConstants": ["scenarios"]
+      }
+    }
+  ]
+}
